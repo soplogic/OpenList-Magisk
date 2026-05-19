@@ -21,60 +21,29 @@ ui_print "检测到架构: $ARCH"
 # 定义二进制文件名
 BINARY_NAME="openlist"
 
-# Code from NGA SDK (https://github.com/TianwanTW/NGA-SDK/blob/nga/src/shell/nga-utils.sh)
-until_key() {
-    local eventCode
-    while :; do
-        eventCode=$(getevent -qlc 1 | awk '{if ($2=="EV_KEY" && $4=="DOWN") {print $3; exit}}')
-        case "$eventCode" in
-        KEY_VOLUMEUP)
-            printf up
-            return
-            ;;
-        KEY_VOLUMEDOWN)
-            printf down
-            return
-            ;;
-        KEY_POWER)
-            echo -n power
-            return
-            ;;
-        KEY_F[1-9] | KEY_F1[0-9] | KEY_F2[0-4])
-            echo -n "$eventCode" | sed 's/KEY_F/f/g'
-            return
-            ;;
-        esac
-    done
-}
+
 
 # 显示菜单选项
 show_binary_menu() {
-    local current=$1
     ui_print " "
     ui_print "📂 选择安装位置"
     ui_print "1、adb/openlist/bin"
     ui_print "2、$MODDIR/bin"
     ui_print "3、$MODDIR/system/bin"
     ui_print "━━━━━━━━━━━━━━━━━━━━━━"
-    ui_print "音量+ 确认  |  音量- 切换"
-    ui_print "━━━━━━━━━━━━━━━━━━━━━━"
-    ui_print "👉 当前选择：选项 $current"
+    ui_print "请输入对应数字并回车确认："
 }
 
 show_data_menu() {
-    local current=$1
     ui_print " "
     ui_print "📁 选择数据目录"
     ui_print "1、data/adb/openlist"
     ui_print "2、Android/openlist"
     ui_print "━━━━━━━━━━━━━━━━━━━━━━"
-    ui_print "音量+ 确认  |  音量- 切换"
-    ui_print "━━━━━━━━━━━━━━━━━━━━━━"
-    ui_print "👉 当前选择：选项 $current"
+    ui_print "请输入对应数字并回车确认："
 }
 
 show_password_menu() {
-    local current=$1
     ui_print " "
     ui_print "🔐 初始密码设置"
     ui_print "询问是否修改初始密码为admin？"
@@ -82,43 +51,39 @@ show_password_menu() {
     ui_print "1、不修改"
     ui_print "2、修改"
     ui_print "━━━━━━━━━━━━━━━━━━━━━━"
-    ui_print "音量+ 确认  |  音量- 切换"
-    ui_print "━━━━━━━━━━━━━━━━━━━━━━"
-    ui_print "👉 当前选择：选项 $current"
+    ui_print "请输入对应数字并回车确认："
 }
 
 # 选择函数
 make_selection() {
     local menu_type="$1"
     local max_options="$2"
-    local current=1
+    local current=""
     
     # 显示初始菜单
     case "$menu_type" in
         "binary")
-            show_binary_menu "$current"
+            show_binary_menu
             ;;
         "data")
-            show_data_menu "$current"
+            show_data_menu
             ;;
         "password")
-            show_password_menu "$current"
+            show_password_menu
             ;;
     esac
     
     while true; do
-        case "$(until_key)" in
-            "up")
+        read -r current
+        case "$current" in
+            [1-$max_options])
                 ui_print "✅ 已确认选项 $current"
                 return $current
                 ;;
-            "down")
-                current=$((current + 1))
-                [ $current -gt $max_options ] && current=1
-                ui_print "👉 当前选择：选项 $current"
+            *)
+                ui_print "❌ 无效输入，请输入 1 到 $max_options 之间的数字并回车："
                 ;;
         esac
-        sleep 0.3
     done
 }
 
